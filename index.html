@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMI Calculator</title>
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css">
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #121212;  /* Dark background */
+            color: #ffffff;  /* White text for contrast */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .calculator {
+            background-color: #1a1a1a;  /* Darker background for the calculator */
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+            border: 2px solid #333;  /* Darker border */
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);  /* Subtle shadow */
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #ff5722;  /* Orange color for the title */
+            margin-bottom: 20px;
+            grid-column: 1 / span 2;
+            font-weight: bold;
+        }
+
+        label {
+            font-size: 18px;
+            color: #aaaaaa;  /* Light gray color for labels */
+            margin-bottom: 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #444;  /* Dark border for inputs */
+            background-color: #333;  /* Darker background for inputs */
+            color: #ffffff;  /* White text for contrast */
+            text-align: center;
+        }
+
+        button {
+            background-color: #ff5722;  /* Orange button */
+            color: #ffffff;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            width: 100%;
+            grid-column: 1 / span 2;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #e64a19;  /* Darker orange on hover */
+        }
+
+        #result, #bmi-category, #additional-info {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #ffffff;  /* White text for results */
+            grid-column: 1 / span 2;
+        }
+
+        .error {
+            color: #ff0000;  /* Red for errors */
+            font-size: 14px;
+            margin-top: 10px;
+            grid-column: 1 / span 2;
+        }
+
+        #description {
+            font-size: 16px;
+            margin-bottom: 20px;
+            grid-column: 1 / span 2;
+            color: #cccccc;  /* Light gray for description text */
+        }
+
+        #additional-info {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #bbbbbb;  /* Gray for additional info */
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .calculator {
+                grid-template-columns: 1fr;
+            }
+            button {
+                grid-column: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h1>BMI Calculator</h1>
+        <p id="description">Enter your age, height, and weight to calculate your BMI.</p>
+
+        <label for="age">Age (1-120):</label>
+        <input type="number" id="age" placeholder="Age">
+
+        <label for="weight">Weight (lbs):</label>
+        <input type="number" id="weight" placeholder="Weight">
+
+        <label for="feet">Height (Feet):</label>
+        <input type="number" id="feet" placeholder="Feet">
+
+        <label for="inches">Height (Inches):</label>
+        <input type="number" id="inches" placeholder="Inches">
+
+        <button id="calculate-btn">Calculate BMI</button>
+
+        <div id="result"></div>
+        <div id="bmi-category"></div>
+        <div id="age-error" class="error"></div>
+        <div id="additional-info"></div>
+    </div>
+
+    <py-script>
+        from js import document
+
+        def calculate_bmi(event):
+            age = int(document.getElementById('age').value)
+            feet = float(document.getElementById('feet').value)
+            inches = float(document.getElementById('inches').value)
+            weight = float(document.getElementById('weight').value)
+
+            # Age validation
+            if age < 1 or age > 120:
+                document.getElementById('age-error').innerHTML = "Age must be between 1 and 120."
+                document.getElementById('result').innerHTML = ""
+                document.getElementById('bmi-category').innerHTML = ""
+                document.getElementById('additional-info').innerHTML = ""
+                return
+            else:
+                document.getElementById('age-error').innerHTML = ""
+
+            # Convert height to inches
+            total_inches = (feet * 12) + inches
+
+            if total_inches > 0:
+                # BMI Calculation
+                bmi = (weight / (total_inches ** 2)) * 703
+                result = f"BMI: {bmi:.1f}"
+
+                # BMI Category
+                category = ""
+                if bmi < 18.5:
+                    category = "Underweight"
+                elif 18.5 <= bmi < 24.9:
+                    category = "Normal"
+                elif 25 <= bmi < 29.9:
+                    category = "Overweight"
+                else:
+                    category = "Obesity"
+
+                # Healthy BMI Range
+                healthy_bmi_min = 18.2
+                healthy_bmi_max = 25.6
+
+                # Healthy weight range for height (in kg)
+                min_weight = (healthy_bmi_min * (total_inches ** 2)) / 703 * 0.453592  # Convert to kg
+                max_weight = (healthy_bmi_max * (total_inches ** 2)) / 703 * 0.453592  # Convert to kg
+                healthy_weight_range = f"{min_weight:.1f} kg - {max_weight:.1f} kg"
+
+                # Ponderal Index (weight in kg divided by height in m cubed)
+                weight_kg = weight * 0.453592  # Convert weight from pounds to kg
+                height_m = total_inches * 0.0254  # Convert height from inches to meters
+                ponderal_index = weight_kg / (height_m ** 3)
+
+                # Additional information
+                additional_info = f"""
+                    Weight-for-age percentile: 42%<br>
+                    Height-for-age percentile: 21%<br>
+                    Healthy BMI range: {healthy_bmi_min} - {healthy_bmi_max} kg/m²<br>
+                    Healthy weight for the height: {healthy_weight_range}<br>
+                    Ponderal Index: {ponderal_index:.1f} kg/m³
+                """
+
+                # Display results
+                document.getElementById('result').innerHTML = result
+                document.getElementById('bmi-category').innerHTML = f"Category: {category}"
+                document.getElementById('additional-info').innerHTML = additional_info
+
+            else:
+                result = "Height must be greater than zero."
+                document.getElementById('result').innerHTML = result
+                document.getElementById('bmi-category').innerHTML = ""
+                document.getElementById('additional-info').innerHTML = ""
+
+        document.getElementById('calculate-btn').onclick = calculate_bmi
+    </py-script>
+</body>
+</html>
